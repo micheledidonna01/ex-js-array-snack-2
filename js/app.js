@@ -53,21 +53,28 @@ const longBooksTitles = longBooks.map(b => b.title);
 console.log("Titles Books with more 300 pages:", longBooksTitles);
 
 /* Snack 2 */
-const availableBooks = books.filter(b => b.available === true);
+const availableBooks = [...books].filter(b => b.available === true);
 console.log("Available Books:", availableBooks);
 
 const discountBooks = availableBooks.map(b => {
-    b.price = b.price.replace('€', '');
-    b.price = parseFloat(b.price);
-    b.price = (b.price - b.price * 0.2).toFixed(2);
-    b.price = b.price.toString() + '€';
-    return b;
+    price = b.price.replace('€', '');
+    price = parseFloat(b.price);
+    price = (b.price - b.price * 0.2).toFixed(2);
+    price = b.price.toString() + '€';
+    return {
+        ...b,
+        price: price
+    };
 });
 
 const fullPricedBook = discountBooks.find(b => {
-    if(b.price.endsWith("00€")) {
+    // TRUCCHETTO PER VEDERE SE UN PREZZO È UN INTERO
+    // b.price = b.price.replace('.00', '');
+    // return b.price % 1 === 0;
+    if (b.price.endsWith("00€")) {
         b.price = b.price.replace('.00', '');
         return b;
+
     }
 
 })
@@ -76,7 +83,7 @@ console.log("Full Price Book:", fullPricedBook);
 
 /* Snack 3 */
 const authors = books.map(b => b.author);
-authors.sort((a,b) => b.age - a.age);
+authors.sort((a, b) => b.age - a.age);
 const areAuthorsAdults = authors.every(a => a.age >= 18);
 console.log(areAuthorsAdults);
 console.log("Authors sorted by age DESC:", authors);
@@ -93,34 +100,32 @@ const mediaAges = sumAges / ages.length;
 console.log("Media of Ages:", mediaAges);
 
 /* Snack 5 */
-
-async function getBooks(){
+async function getBooks() {
     const ids = [2, 13, 7, 21, 19];
-    const idsString = ids.map(id => id.toString());
-    const promises = idsString.map(id => {
+    const promises = ids.map(id => {
         return fetchJson(`http://localhost:3333/books/${id}`)
     });
-    const result = await Promise.allSettled(promises);
+    const result = await Promise.all(promises);
     console.log(result);
-    
+
     return result;
 }
 
 
-async function fetchJson(url){
+async function fetchJson(url) {
     const response = await fetch(url);
     const book = await response.json();
     return book;
 }
 
 getBooks()
-.then(data => console.log("Data fetched:", data))
-.catch(error => console.error("Error fetching data:", error));
+    .then(data => console.log("Data fetched:", data))
+    .catch(error => console.error("Error fetching data:", error));
 
 
 /* Snack 6 */
 const areThereAvailableBooks = books.some(b => b.available === true);
-const booksByPrice = books.sort((a, b) => {
+const booksByPrice = [...books].sort((a, b) => {
     const aInt = parseFloat(a.price.replace('€', ''));
     const bInt = parseFloat(b.price.replace('€', ''));
     return aInt - bInt;
@@ -138,11 +143,16 @@ console.log("Books ordere by price and available", booksByPrice);
 
 
 /* Snack 7 */
-const tagCounts = books.map(b => b.tags.map((t, index) => t[index])).reduce(((acc, count) => {
-    if (count){
-        acc ++;
-    }
+const tagCounts = books.reduce(((acc, b) => {
+    b.tags.forEach((tag, index) => {
+        if (acc[tag]) {
+            acc[tag]++;
+        } else {
+            acc[tag] = 1;
+        }
+    })
     return acc;
-}), 0);
+
+}), {});
 
 console.log(tagCounts);
